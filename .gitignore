@@ -1,0 +1,30 @@
+# Dependências
+node_modules/
+
+# Arquivos de build
+dist/
+build/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Arquivos de IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db

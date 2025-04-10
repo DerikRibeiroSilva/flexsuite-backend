@@ -1,0 +1,546 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+  relationMode = "foreignKeys"
+}
+
+enum Status {
+  ATIVO
+  INATIVO
+}
+
+enum ProjectStatus {
+  PLANEJAMENTO
+  EM_ANDAMENTO
+  PAUSADO
+  CONCLUIDO
+  CANCELADO
+}
+
+enum Gender {
+  HOMEM
+  MULHER
+}
+
+enum MaritalStatus {
+  SOLTEIRO
+  CASADO
+  DIVORCIADO
+  VIUVO
+}
+
+enum Department {
+  ADMINISTRATIVO
+  OPERACIONAL
+  COMERCIAL
+  OUTRO
+  OPERACAO
+  VENDAS
+  ORCAMENTO
+  SUPERVISION
+  LOGISTICA
+  QUALIDADE
+  ATENDIMENTO_AO_CLIENTE
+  RECURSOS_HUMANOS
+  FINANCEIRO
+  MARKETING
+  PROJETOS
+  SEGURANCA_DO_TRABALHO
+  TI
+  COMPRAS
+  MANUTENCAO
+}
+
+enum PlanFrequency {
+  MENSAL
+  TRIMESTRAL
+  SEMESTRAL
+  ANUAL
+}
+
+enum PlanStatus {
+  ATIVO
+  INATIVO
+  PROMOCIONAL
+}
+
+enum SubscriptionStatus {
+  ATIVA
+  PENDENTE
+  CANCELADA
+  TRIAL
+  EXPIRADA
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String
+  description String?
+  userRoles   UserRole[]
+}
+
+model UserRole {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  roleId    String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, roleId])
+}
+
+enum PaymentRegime {
+  CLT
+  CLTD
+  TERCEIRO
+}
+
+enum WorkShift {
+  TEMPO_INTEGRAL
+  PARCIAL
+  REMOTO
+  HIBRIDO
+}
+
+enum PaymentType {
+  MENSAL
+  QUINZENAL
+  SEMANAL
+  DIARIO
+}
+
+enum PersonType {
+  PESSOA_FISICA
+  PESSOA_JURIDICA
+  ESTRANGEIRO
+}
+
+enum AddressType {
+  RESIDENCIAL
+  COMERCIAL
+  ENTREGA
+  PROJECT
+}
+
+enum ContactType {
+  RESIDENCIAL
+  COMERCIAL
+  PERSONAL
+}
+
+enum TaxpayerType {
+  CONTRIBUINTE_ICMS
+  CONTRIBUINTE_ISENTO
+  NAO_CONTRIBUINTE
+}
+
+enum AccountType {
+  CONTA_CORRENTE
+  CONTA_POUPANCA
+  CONTA_JURIDICA
+}
+
+enum PaymentCondition {
+  A_VISTA
+  SETE_DIAS
+  QUATORZE_DIAS
+  TRINTA_DIAS
+  PERSONALIZADO
+}
+
+enum BudgetStatus {
+  EM_ABERTO
+  CONCLUIDO
+  CANCELADO
+}
+
+enum SalesChannel {
+  EMAIL
+  WHATSAPP
+  TELEFONE
+}
+
+model Address {
+  id           String       @id @default(uuid())
+  type         AddressType
+  postalCode   String
+  street       String
+  number       String
+  complement   String?
+  neighborhood String?
+  city         String?
+  state        String?
+  customers    Customer[]   @relation("CustomerAddress")
+  employees    Employee[]   @relation("EmployeeAddress")
+  projects     Project[]    @relation("ProjectAddress")
+  suppliers    Supplier[]   @relation("SupplierAddress")
+}
+
+model Contact {
+  id       String      @id @default(uuid())
+  type     ContactType
+  name     String
+  email    String
+  phone    String
+  role     String?
+  note     String?
+  customer Customer[]  @relation("CustomerContact")
+  employee Employee[]  @relation("EmployeeContact")
+  supplier Supplier[]  @relation("SupplierContact")
+}
+
+model CustomerCompany {
+  id            String        @id @default(uuid())
+  name          String
+  users         User[]
+  suppliers     Supplier[]
+  plan          Plan?         @relation(fields: [planId], references: [id])
+  planId        String?
+  subscriptions Subscription[]
+  status        Status        @default(ATIVO)
+  trialEndsAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model BankDetails {
+  id                  String           @id @default(uuid())
+  bank                String
+  agency              String
+  accountNumber       String
+  accountType         AccountType
+  pixKey              String
+  paymentCondition    PaymentCondition
+  creditLimit         Float?
+  allowCreditOveruse  Boolean
+  suframaRegistration String
+  
+  // Relação com Employee
+  employeeId          String?          @unique
+  employee            Employee?        @relation(fields: [employeeId], references: [id])
+  
+  // Relação com Supplier
+  supplierId          String?          @unique
+  supplier            Supplier?        @relation(fields: [supplierId], references: [id])
+}
+
+model CompensationBenefits {
+  id                   String       @id @default(uuid())
+  baseSalary           Float
+  dailyCost            Float
+  paymentType          PaymentType
+  transportationVoucher Float
+  mealVoucher          Float
+  healthPlan           Float
+  
+  // Relação com Employee
+  employeeId           String?      @unique
+  employee             Employee?    @relation(fields: [employeeId], references: [id])
+}
+
+model Employee {
+  id                  String               @id @default(uuid())
+  status              Status
+  name                String
+  cpf                 String
+  birthDate           DateTime
+  gender              Gender
+  maritalStatus       MaritalStatus
+  nationality         String
+  placeOfBirth        String
+  contacts            Contact[]            @relation("EmployeeContact")
+  addresses           Address[]            @relation("EmployeeAddress")
+  position            String
+  department          Department
+  paymentRegime       PaymentRegime
+  weeklyWorkload      String
+  workShift           WorkShift
+  admissionDate       DateTime
+  terminationDate     DateTime?
+  terminationReason   String?
+  
+  // Relações 1:1
+  bankDetails         BankDetails?
+  compensationBenefits CompensationBenefits?
+  
+  notes               String?
+  
+  // Relações com outros modelos
+  budgetsResponsible  Budget[]             @relation("BudgetResponsible")
+  projectsResponsible Project[]            @relation("ProjectResponsible")
+  budgetEmployees     BudgetEmployee[]
+  customersResponsible Customer[]          @relation("CustomerResponsible")
+  suppliersResponsible Supplier[]          @relation("SupplierResponsible")
+}
+
+model Customer {
+  id                  String       @id @default(uuid())
+  type                PersonType
+  status              Status
+  name                String
+  email               String
+  website             String?
+  representative      String?
+  creditLimit         Float?
+  allowCreditOveruse  Boolean?
+  notes               String?
+  addresses           Address[]    @relation("CustomerAddress")
+  contacts            Contact[]    @relation("CustomerContact")
+  cpf                 String?
+  birthDate           DateTime?
+  fantasyName         String?
+  cnpj                String?
+  corporateName       String?
+  stateRegistration   String?
+  taxpayerType        TaxpayerType?
+  municipalRegistration String?
+  suframaRegistration String?
+  
+  // Relacionamento com Employee
+  responsibleId       String?
+  responsible         Employee?    @relation("CustomerResponsible", fields: [responsibleId], references: [id])
+  
+  projects            Project[]
+  budgets             Budget[]
+}
+
+model Project {
+  id               String         @id @default(uuid())
+  name             String
+  description      String
+  customer         Customer       @relation(fields: [customerId], references: [id])
+  customerId       String
+  status           ProjectStatus
+  expectedStartDate DateTime
+  expectedEndDate  DateTime
+  actualStartDate  DateTime?
+  actualEndDate    DateTime?
+  responsible      Employee       @relation("ProjectResponsible", fields: [responsibleId], references: [id])
+  responsibleId    String
+  addresses        Address[]      @relation("ProjectAddress")
+  notes            String?
+  budgets          Budget[]
+}
+
+model Budget {
+  id                   String           @id @default(uuid())
+  number               String
+  totalValue           Float
+  createdAt            DateTime
+  deliveryDate         DateTime
+  validity             DateTime
+  costCenter           String
+  publicObservations   String
+  internalObservations String
+  customer             Customer         @relation(fields: [customerId], references: [id])
+  customerId           String
+  status               BudgetStatus
+  project              Project          @relation(fields: [projectId], references: [id])
+  projectId            String
+  responsible          Employee         @relation("BudgetResponsible", fields: [responsibleId], references: [id])
+  responsibleId        String
+  salesChannel         SalesChannel
+  paymentCondition     PaymentCondition
+  employees            BudgetEmployee[]
+  products             BudgetProduct[]
+  services             BudgetService[]
+}
+
+model BudgetEmployee {
+  id          String    @id @default(uuid())
+  hours       Float
+  valueHour   Float
+  valueTotal  Float
+  observations String
+  
+  budget      Budget?   @relation(fields: [budgetId], references: [id])
+  budgetId    String?
+  
+  employee    Employee? @relation(fields: [employeeId], references: [id])
+  employeeId  String?
+}
+
+model BudgetProduct {
+  id                     String   @id @default(uuid())
+  quantity               Float
+  unitPrice              Float
+  totalValue             Float
+  observations           String
+  discount               Float
+  totalValueWithDiscount Float
+  budget                 Budget?  @relation(fields: [budgetId], references: [id])
+  budgetId               String?
+  product                Product? @relation(fields: [productId], references: [id])
+  productId              String?
+}
+
+model BudgetService {
+  id                     String   @id @default(uuid())
+  quantity               Float
+  unitPrice              Float
+  totalValue             Float
+  observations           String
+  discount               Float
+  totalValueWithDiscount Float
+  budget                 Budget?  @relation(fields: [budgetId], references: [id])
+  budgetId               String?
+  service                Service? @relation(fields: [serviceId], references: [id])
+  serviceId              String?
+}
+
+model Product {
+  id                     String         @id @default(uuid())
+  code                   String
+  status                 Status
+  ean                    String?
+  description            String
+  basePrice              Float?
+  category               String
+  model                  String?
+  manufacturer           String?
+  manufacturerPartNumber String
+  unitOfMeasure          UnitOfMeasure @relation(fields: [unitOfMeasureId], references: [id])
+  unitOfMeasureId        String
+  ncm                    String?
+  cest                   String?
+  notes                  String?
+  budgetProducts         BudgetProduct[]
+}
+
+model Service {
+  id                    String         @id @default(uuid())
+  status                Status
+  code                  String
+  description           String
+  category              String
+  price                 Float
+  unitOfMeasure         UnitOfMeasure @relation(fields: [unitOfMeasureId], references: [id])
+  unitOfMeasureId       String
+  operationCost         Float
+  serviceTableCode      String
+  nbs                   String
+  additionalDescription String
+  notes                 String
+  issAliquote           Float
+  taxRetention          Boolean
+  budgetServices        BudgetService[]
+}
+
+model UnitOfMeasure {
+  id          String     @id @default(uuid())
+  description String
+  products    Product[]
+  services    Service[]
+}
+
+model Supplier {
+  id                   String          @id @default(uuid())
+  customerCompany      CustomerCompany @relation(fields: [customerCompanyId], references: [id])
+  customerCompanyId    String
+  type                 PersonType
+  status               Status
+  name                 String
+  corporateName        String?
+  fantasyName          String?
+  cpf                  String?
+  cnpj                 String?
+  stateRegistration    String?
+  municipalRegistration String?
+  taxpayerType         TaxpayerType?
+  
+  // Relacionamento com Employee
+  responsibleId        String?
+  responsible          Employee?      @relation("SupplierResponsible", fields: [responsibleId], references: [id])
+  
+  website              String?
+  addresses            Address[]      @relation("SupplierAddress")
+  contacts             Contact[]      @relation("SupplierContact")
+  bankDetails          BankDetails?
+}
+
+model User {
+  id               String          @id @default(uuid())
+  customerCompany  CustomerCompany @relation(fields: [customerCompanyId], references: [id])
+  customerCompanyId String
+  name             String
+  email            String          @unique
+  phone            String
+  password         String          // Armazenará hash da senha
+  isAdmin          Boolean         @default(false)
+  isVerified       Boolean         @default(false)
+  isActive         Boolean         @default(true)
+  lastLogin        DateTime?
+  roles            UserRole[]
+  authTokens       AuthToken[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model Plan {
+  id                String              @id @default(uuid())
+  name              String
+  description       String              @db.Text
+  price             Float
+  frequency         PlanFrequency
+  status            PlanStatus          @default(ATIVO)
+  features          String              @db.Text
+  maxUsers          Int
+  maxProjects       Int
+  maxCustomers      Int
+  maxSuppliers      Int
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  subscriptions     Subscription[]
+  customerCompanies CustomerCompany[]
+}
+
+model Subscription {
+  id               String             @id @default(uuid())
+  customerCompany  CustomerCompany    @relation(fields: [customerCompanyId], references: [id])
+  customerCompanyId String
+  plan             Plan               @relation(fields: [planId], references: [id])
+  planId           String
+  status           SubscriptionStatus
+  startDate        DateTime
+  endDate          DateTime
+  currentPeriodStart DateTime
+  currentPeriodEnd  DateTime
+  canceledAt       DateTime?
+  price            Float
+  lastPaymentDate  DateTime?
+  nextPaymentDate  DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  payments         Payment[]
+}
+
+model Payment {
+  id               String        @id @default(uuid())
+  subscription     Subscription  @relation(fields: [subscriptionId], references: [id])
+  subscriptionId   String
+  amount           Float
+  paymentDate      DateTime
+  status           String
+  paymentMethod    String
+  transactionId    String?
+  receiptUrl       String?
+  notes            String?       @db.Text
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model AuthToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  type      String    // password_reset, email_verification
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  used      Boolean   @default(false)
+}
