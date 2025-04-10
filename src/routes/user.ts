@@ -7,7 +7,7 @@ router.use(authenticate);
 
 router.get('/', requireAdmin, userController.getAll);
 router.get('/:id', requireAdmin, userController.getById);
-router.post('/', requireAdmin, userController.create);
+// router.post('/', requireAdmin, userController.create);
 router.put('/:id', requireAdmin, userController.update);
 router.delete('/:id', requireAdmin, userController.delete);
 

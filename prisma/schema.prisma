@@ -245,20 +245,20 @@ model CompensationBenefits {
 
 model Employee {
   id                  String               @id @default(uuid())
-  status              Status
+  status              Status?
   name                String
-  cpf                 String
-  birthDate           DateTime
-  gender              Gender
-  maritalStatus       MaritalStatus
-  nationality         String
-  placeOfBirth        String
+  cpf                 String?
+  birthDate           DateTime?
+  gender              Gender?
+  maritalStatus       MaritalStatus?
+  nationality         String?
+  placeOfBirth        String?
   contacts            Contact[]            @relation("EmployeeContact")
   addresses           Address[]            @relation("EmployeeAddress")
-  position            String
-  department          Department
-  paymentRegime       PaymentRegime
-  weeklyWorkload      String
+  position            String?
+  department          Department?
+  paymentRegime       PaymentRegime?
+  weeklyWorkload      String?
   workShift           WorkShift
   admissionDate       DateTime
   terminationDate     DateTime?
