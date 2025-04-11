@@ -165,6 +165,12 @@ enum SalesChannel {
   TELEFONE
 }
 
+enum Teste {
+  EMAIL
+  WHATSAPP
+  TELEFONE
+}
+
 model Address {
   id           String       @id @default(uuid())
   type         AddressType
