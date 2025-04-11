@@ -14,7 +14,6 @@ services:
             - app-network
 
     db:
-        build: ./.docker/mysql
         restart: always
         tty: true
         volumes:
@@ -22,6 +21,8 @@ services:
         environment:
             MYSQL_DATABASE: "${DB_NAME}"
             MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASS}"
+        volumes:
+            - mysql-data:/var/lib/mysql
         ports:
             - 3306:3306
         expose:
